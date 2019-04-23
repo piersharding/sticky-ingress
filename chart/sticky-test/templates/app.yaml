@@ -1,0 +1,100 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+    chart: {{ template "sticky-test.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+  - name: sticky-http
+    port: 8080
+    protocol: TCP
+  selector:
+    app: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tls-secret-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+type: kubernetes.io/tls
+data:
+{{ (tpl (.Files.Glob "data/tls.*").AsSecrets . ) | indent 2  }}
+
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "ingress-sticky-route"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+spec:
+  tls:
+    - hosts:
+      - {{ .Values.sticky.hostName }}
+      secretName: tls-secret-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+  rules:
+    - host: {{ .Values.sticky.hostName }}
+      http:
+        paths:
+        - path: /
+          backend:
+           serviceName: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+           servicePort: 8080
+
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+    chart: {{ template "sticky-test.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      app: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: sticky-{{ template "sticky-test.name" . }}-{{ .Release.Name }}
+        chart: {{ template "sticky-test.chart" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      containers:
+      - name: sticky
+        image: "{{ .Values.sticky.image.registry }}/{{ .Values.sticky.image.image }}:{{ .Values.sticky.image.tag }}"
+        imagePullPolicy: {{ .Values.sticky.image.pullPolicy }}
+        ports:
+        - name: sticky-http
+          containerPort: 8080
+          protocol: TCP
+
+{{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}

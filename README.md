@@ -8,12 +8,20 @@ This repo is an example of using the Nginx Ingress controller to create sticky s
 Setting up Ingress controller
 =============================
 
+Details can be found at https://kubernetes.github.io/ingress-nginx/deploy/ .
+
 On minikube it is as simple as:
 ```
 $ minikube addons enable ingress
 ```
 
-On some other configuration eg: magnum, then the following can be used:
+Setup the LoadBalancer automatically with:
+```
+curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml | grep -v externalTrafficPolicy | kubectl apply -f -
+```
+`grep -v externalTrafficPolicy` removes the `externalTrafficPolicy: Local` directive which is currently not supported on CC (related: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip).
+
+Or on some other configuration eg: magnum, then the following can be used:
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
 $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml

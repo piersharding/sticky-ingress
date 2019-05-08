@@ -10,18 +10,28 @@ Setting up Ingress controller
 
 Details can be found at https://kubernetes.github.io/ingress-nginx/deploy/ .
 
+Minikube
+--------
+
 On minikube it is as simple as:
 ```
 $ minikube addons enable ingress
 ```
 
-Setup the LoadBalancer automatically with:
+Catalyst Cloud
+--------------
+
+On Catalyst Cloud (which is magnum based), setup the Ingress Controller and LoadBalancer automatically with:
 ```
-curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml | grep -v externalTrafficPolicy | kubectl apply -f -
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
+$ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml | grep -v externalTrafficPolicy | kubectl apply -f -
 ```
 `grep -v externalTrafficPolicy` removes the `externalTrafficPolicy: Local` directive which is currently not supported on CC (related: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip).
 
-Or on some other configuration eg: magnum, then the following can be used:
+Other Clouds
+------------
+
+Or on some other cloud configurations eg: magnum, then the following can be used:
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
 $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml

@@ -24,7 +24,7 @@ Catalyst Cloud
 On Catalyst Cloud (which is magnum based), setup the Ingress Controller and LoadBalancer automatically with:
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
-$ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml | grep -v externalTrafficPolicy | kubectl apply -f -
+$ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml | grep -v externalTrafficPolicy | kubectl apply -f -
 ```
 `grep -v externalTrafficPolicy` removes the `externalTrafficPolicy: Local` directive which is currently not supported on CC (related: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip).
 
